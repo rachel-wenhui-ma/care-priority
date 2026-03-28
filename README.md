@@ -121,9 +121,7 @@ care-priority/
 
 ## Demo
 
-🎬 **Video Demo:** [Coming soon]
-
-<!-- Replace with actual link before submission -->
+🌐 **Live Demo:** [https://care-priority.streamlit.app](https://care-priority.streamlit.app)
 
 ### Run Locally
 
