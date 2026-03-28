@@ -123,6 +123,8 @@ care-priority/
 
 🌐 **Live Demo:** [https://care-priority.streamlit.app](https://care-priority.streamlit.app)
 
+📊 **Presentation Slides:** [slides.pptx](slides.pptx)
+
 ### Run Locally
 
 ```bash
