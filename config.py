@@ -6,12 +6,12 @@ from pathlib import Path
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR  = Path(__file__).parent
-DATA_DIR  = BASE_DIR.parent / "Source" / "Data Sources for Hackathon" / "hackathon-data"
+DATA_DIR  = BASE_DIR / "data"
 
-TRACK1_DIR    = DATA_DIR / "track-1-clinical-ai" / "synthea-patients"
-TRACK2_DIR    = DATA_DIR / "track-2-population-health" / "bc-community-profiles"
-WAIT_TIMES_CSV = DATA_DIR / "track-2-population-health" / "cihi-wait-times" / "wait_times_mock.csv"
-OPIOID_CSV     = DATA_DIR / "track-2-population-health" / "opioid-surveillance" / "opioid_harms_mock.csv"
+TRACK1_DIR     = DATA_DIR / "track-1" / "synthea-patients"
+TRACK2_DIR     = DATA_DIR / "track-2" / "bc-community-profiles"
+WAIT_TIMES_CSV = DATA_DIR / "track-2" / "cihi-wait-times" / "wait_times_mock.csv"
+OPIOID_CSV     = DATA_DIR / "track-2" / "opioid-surveillance" / "opioid_harms_mock.csv"
 
 # ── Geography: FSA → CHSA (BC postal code geography, Greater Victoria area) ──
 # Source: BC Stats postal code geography; all Track-1 patients are Island Health
