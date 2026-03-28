@@ -125,6 +125,8 @@ care-priority/
 
 📊 **Presentation Slides:** [slides.pptx](slides.pptx)
 
+🎬 **Demo Recording:** [care-priority.mp4](care-priority.mp4)
+
 ### Run Locally
 
 ```bash
