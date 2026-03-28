@@ -77,7 +77,7 @@ def _wait_burden_score(has_wait_burden: bool,
     access_factor = min(pct_without_family_doctor / 20.0, 1.5)  # normalise around 20%
     pts = min(round(RISK_MAX["wait_burden"] * access_factor), RISK_MAX["wait_burden"])
     flag = (f"Needs {wait_procedure} — BC median wait: {int(wait_days_bc)} days "
-            f"({pct_without_family_doctor:.0f}% in community lack GP to refer)")
+            f"(community-level access barrier: {pct_without_family_doctor:.0f}% unattached)")
     return pts, flag
 
 
@@ -197,9 +197,8 @@ def compute_system_impact(row) -> list[str]:
     impacts = []
     ed = int(row.get("ed_visits_12m", 0))
     if ed >= 2:
-        preventable = max(1, round(ed * 0.30))
         impacts.append(
-            f"~{preventable} preventable ED visit(s)/yr if connected to primary care"
+            f"Potentially avoidable ED burden ({ed} visits/yr) if primary care access improves"
         )
     if row.get("no_followup", False) and int(row.get("total_admissions", 0)) > 0:
         impacts.append(

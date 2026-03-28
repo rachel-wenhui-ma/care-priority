@@ -115,11 +115,11 @@ and community-level resource planning. Use alongside clinical judgement.
 # ── Cohort Outcomes ───────────────────────────────────────────────────────────
 st.subheader("Cohort Outcomes — High-Priority Patients")
 o1, o2, o3, o4 = st.columns(4)
-o1.metric("🔴🟠 HP without Family Doctor", outcomes["hp_no_family_doctor"],
-          help=f"CRITICAL+HIGH in communities ≥20% without GP (of {outcomes['high_priority_count']})")
-o2.metric("🔁 Repeat ED Visitors (≥3/yr)", outcomes["hp_repeat_ed"])
-o3.metric("💉 Diabetics Overdue", outcomes["hp_diabetics_overdue"])
-o4.metric("🛡️ Est. Preventable ED/yr", f"{outcomes['preventable_ed_visits']:,}",
+o1.metric("🔴 High-priority without family doctor", outcomes["hp_no_family_doctor"],
+          help=f"CRITICAL + HIGH patients in communities where ≥20% lack a GP ({outcomes['high_priority_count']} total)")
+o2.metric("🔁 Frequent ED users (≥3/yr)", outcomes["hp_repeat_ed"])
+o3.metric("💉 Diabetes follow-up overdue", outcomes["hp_diabetics_overdue"])
+o4.metric("🛡️ Potentially preventable ED visits/yr", f"{outcomes['preventable_ed_visits']:,}",
           delta=f"~${outcomes['preventable_cost_cad']:,.0f} potential savings",
           delta_color="inverse")
 
@@ -216,7 +216,11 @@ with tab1:
         else:
             page_size = 20
             total_pages = max(1, (len(filtered) - 1) // page_size + 1)
-            page = st.number_input("Page", 1, total_pages, 1, 1)
+            pcol1, pcol2, pcol3 = st.columns([1, 1, 1])
+            with pcol1:
+                page = st.number_input("Page", 1, total_pages, 1, 1, label_visibility="collapsed")
+            with pcol2:
+                st.caption(f"Page {page} of {total_pages}")
             page_df = filtered.iloc[(page - 1) * page_size : page * page_size]
 
             for _, row in page_df.iterrows():
@@ -247,8 +251,8 @@ with tab1:
                         st.markdown("**🚧 Access Barrier**")
                         barriers = cats["access_barrier"].copy()
                         gp_pct = row.get("pct_without_family_doctor", 0)
-                        if gp_pct >= 15 and not any("GP" in b or "family" in b.lower() for b in barriers):
-                            barriers.insert(0, f"{gp_pct:.0f}% in community lack a family doctor")
+                        if gp_pct >= 15 and not any("GP" in b or "family" in b.lower() or "unattached" in b.lower() for b in barriers):
+                            barriers.insert(0, f"Area-level context: {gp_pct:.0f}% in community without family doctor")
                         for f in (barriers or ["_No significant access barriers_"]):
                             st.markdown(f"- {f}")
                     with why3:
@@ -317,6 +321,19 @@ with tab2:
         fig_scatter.update_layout(margin=dict(l=0, r=0, t=10, b=0))
         st.plotly_chart(fig_scatter, use_container_width=True)
 
+        # Quick-link to Scenario Simulator
+        st.markdown("---")
+        patient_comm_names = sorted(priorities["chsa_name"].dropna().unique())
+        sim_pick = st.selectbox(
+            "🔬 Explore a community in the Scenario Simulator →",
+            options=patient_comm_names,
+            key="ci_community_pick",
+            help="Select a community here, then switch to the Scenario Simulator tab"
+        )
+        if sim_pick:
+            st.session_state["scenario_community"] = sim_pick
+            st.caption(f"Selected **{sim_pick}** — switch to the **🔬 Scenario Simulator** tab to run what-if analysis.")
+
         # BC Provincial Context
         st.markdown("---")
         st.subheader("🏔️ BC Provincial Context")
@@ -376,8 +393,17 @@ with tab3:
     }
 
     sc1, sc2 = st.columns([2, 1])
+    # Check if a community was selected from Community Insights tab
+    option_labels = list(community_options.keys())
+    default_idx = 0
+    preselected = st.session_state.get("scenario_community")
+    if preselected:
+        for i, lbl in enumerate(option_labels):
+            if preselected in lbl:
+                default_idx = i
+                break
     with sc1:
-        selected_label = st.selectbox("Select community", options=list(community_options.keys()))
+        selected_label = st.selectbox("Select community", options=option_labels, index=default_idx)
     selected_chsa = community_options[selected_label]
 
     with sc2:
@@ -437,8 +463,11 @@ with tab3:
                   help="Number of patients who dropped to a lower-urgency tier")
         st.metric("Fewer high-priority patients", scenario["avoided_hp"],
                   help="Patients who moved out of CRITICAL/HIGH")
-        st.metric("Est. avoided ED visits/yr", scenario["avoided_ed_visits"])
-        st.metric("Est. cost savings/yr", f"${scenario['avoided_cost']:,.0f} CAD")
+        hp_before = sum(scenario["before_tiers"].get(t, 0) for t in ["CRITICAL", "HIGH"])
+        hp_after  = sum(scenario["after_tiers"].get(t, 0) for t in ["CRITICAL", "HIGH"])
+        st.metric("High-priority patients in community",
+                  f"{hp_after} (was {hp_before})")
+        st.caption("*Scenario planning estimate only — community-level association, not individual-level causal proof.*")
 
     # ── Before/After comparison chart ─────────────────────────────────────────
     st.markdown("---")
@@ -463,9 +492,7 @@ with tab3:
         f"**Planning estimate:** Reducing the unattached rate in **{scenario['community_name']}** "
         f"from {scenario['current_unattached']}% to {scenario['new_unattached']}% would lower "
         f"the community vulnerability score from {scenario['current_vuln']} to {scenario['new_vuln']:.1f}, "
-        f"moving **{scenario['n_improved']}** patient(s) to lower-urgency tiers and potentially "
-        f"avoiding **{scenario['avoided_ed_visits']}** ED visits/year "
-        f"(~${scenario['avoided_cost']:,.0f} CAD)."
+        f"moving **{scenario['n_improved']}** patient(s) to lower-urgency tiers."
     )
     st.caption(
         "⚠️ This is a sensitivity analysis within the scoring framework, not a causal prediction. "
